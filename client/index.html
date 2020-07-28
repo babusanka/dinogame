@@ -1,0 +1,24 @@
+<canvas  id="ctx" width="800" height="800" style="border:5px solid rgb(117, 209, 12); transition: all ease-in-out 5s;"></canvas>
+
+<script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
+<script>
+    var ctx = document.getElementById("ctx"). 
+    getContext("2d")
+    ctx.font = '30px Arial'
+    
+
+    var socket = io()
+
+    socket.on('newPositions',function(data){
+        console.log(data)
+        ctx.clearRect(0,0,800,800)
+        for(var i = 0 ; i < data.length; i++){
+            ctx.fillText("Player",data[i].x,data[i].y)
+            ctx.fillStyle = data[i].color
+        }
+       
+    })
+
+
+</script>
+
