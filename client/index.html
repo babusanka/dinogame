@@ -1,11 +1,12 @@
-<canvas  id="ctx" width="500" height="500" style="border:1px solid rgb(117, 209, 12); transition: all ease-in-out 5s;"></canvas>
+<canvas id="ctx" width="500" height="500" style="border:1px solid rgb(117, 209, 12); transition: all ease-in-out 5s;"></canvas>
 
-<div id="chat.text" style="width: 500px;height:100px;overflow-y:scroll">
+<div id="chat-text" style="width: 500px;height:100px;overflow-y:scroll">
     <div>Hello!</div>
 </div>
 
 <form id="chat-form">
-    <input id="chat-input" type="text" style="width:500;"><input>
+    <input id="chat-input" type="text" style="width:500;">
+    <input type="submit">
 </form>
 
 <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
@@ -18,50 +19,130 @@
 
     var socket = io()
 
-    socket.on('newPositions',function(data){
+    socket.on('newPositions', function(data) {
         console.log(data)
-        ctx.clearRect(0,0,800,800)
-        for(var i = 0 ; i < data.player.length; i++){
-            ctx.fillText(data.player[i].number,data.player[i].x,data.player[i].y)
+        ctx.clearRect(0, 0, 800, 800)
+        for (var i = 0; i < data.player.length; i++) {
+            ctx.fillText(data.player[i].number, data.player[i].x, data.player[i].y)
 
-        for(var i = 0 ; i < data.bullet.length; i++)
-            ctx.fillRect(data.bullet[i].x-5,data.bullet[i].y-5,10,10)
+
         }
 
-socket.on('addToChat',function(data){
-        chatText.innerHTML += '<div>' + data + '</div>'
-
-})
-    chatForm.onsubmit = function(e){
-        e.preventDefault()
-        socket.emit('sendMsgToServer',chatInput.value)
-        chatInput.value = ''
-    }
+        for (var i = 0; i < data.bullet.length; i++) {
+            ctx.fillRect(data.bullet[i].x - 5, data.bullet[i].y - 5, 10, 10)
+        }
 
     })
 
-    document.onkeydown = function(event){
-        if(event.keyCode === 68)
-            socket.emit('keyPress',{inputId:'right',state:true})
-        else if(event.keyCode === 83)
-            socket.emit('keyPress',{inputId:'down',state:true})
-        else if(event.keyCode === 65)
-            socket.emit('keyPress',{inputId:'left',state:true})
-        else if(event.keyCode === 87) 
-            socket.emit('keyPress',{inputId:'up',state:true})
+    socket.on('addToChat', function(data) {
+        chatText.innerHTML += '<div>' + data + '</div>'
+
+    })
+
+    socket.on('wanker', function(data) {
+        alert(data)
+
+    })
+
+    chatForm.onsubmit = function(e) {
+        e.preventDefault()
+        socket.emit('sendMsgToServer', chatInput.value)
+        chatInput.value = ''
     }
 
-    document.onkeyup = function(event){
-        if(event.keyCode === 68)
-            socket.emit('keyPress',{inputId:'right',state:false})
-        else if(event.keyCode === 83)
-            socket.emit('keyPress',{inputId:'down',state:false})
-        else if(event.keyCode === 65)
-            socket.emit('keyPress',{inputId:'left',state:false})
-        else if(event.keyCode === 87) 
-            socket.emit('keyPress',{inputId:'up',state:false})
+
+
+    document.onkeydown = function(event) {
+        if (event.keyCode === 68)
+            socket.emit('keyPress', {
+                inputId: 'right',
+                state: true
+            })
+        else if (event.keyCode === 83)
+            socket.emit('keyPress', {
+                inputId: 'down',
+                state: true
+            })
+        else if (event.keyCode === 65)
+            socket.emit('keyPress', {
+                inputId: 'left',
+                state: true
+            })
+        else if (event.keyCode === 87)
+            socket.emit('keyPress', {
+                inputId: 'up',
+                state: true
+            })
+    }
+
+    document.onkeyup = function(event) {
+        if (event.keyCode === 68)
+            socket.emit('keyPress', {
+                inputId: 'right',
+                state: false
+            })
+        else if (event.keyCode === 83)
+            socket.emit('keyPress', {
+                inputId: 'down',
+                state: false
+            })
+        else if (event.keyCode === 65)
+            socket.emit('keyPress', {
+                inputId: 'left',
+                state: false
+            })
+        else if (event.keyCode === 87)
+            socket.emit('keyPress', {
+                inputId: 'up',
+                state: false
+            })
 
     }
-            
+</script>
 
+
+
+<script>
+    var allowedKeys = {
+        37: 'left',
+        38: 'up',
+        39: 'right',
+        40: 'down',
+        65: 'a',
+        66: 'b'
+    };
+
+    // the 'official' Konami Code sequence
+    var konamiCode = ['up', 'up', 'down', 'down', 'left', 'right', 'left', 'right', 'b', 'a'];
+
+    // a variable to remember the 'position' the user has reached so far.
+    var konamiCodePosition = 0;
+
+    // add keydown event listener
+    document.addEventListener('keydown', function(e) {
+        // get the value of the key code from the key map
+        var key = allowedKeys[e.keyCode];
+        // get the value of the required key from the konami code
+        var requiredKey = konamiCode[konamiCodePosition];
+
+        // compare the key with the required key
+        if (key == requiredKey) {
+
+            // move to the next key in the konami code sequence
+            konamiCodePosition++;
+
+            // if the last key is reached, activate cheats
+            if (konamiCodePosition == konamiCode.length) {
+                activateCheats();
+                konamiCodePosition = 0;
+            }
+        } else {
+            konamiCodePosition = 0;
+        }
+    });
+
+    function activateCheats() {
+
+        socket.emit('wanker')
+    }
 </script>
