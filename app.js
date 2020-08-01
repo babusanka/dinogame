@@ -43,6 +43,8 @@ var Player = function(id) {
     self.pressingLeft = false
     self.pressingUp = false
     self.pressingDown = false
+    self.pressingAttack = false
+    self.mouseAngle = 0
     self.maxSpd = 10
 
     var super_update = self.update
@@ -50,8 +52,17 @@ var Player = function(id) {
         self.updateSpd()
         super_update()
 
-    }
+        if (self.pressingAttack) {
+            self.shootBullet(self.mouseAngle)
+        }
 
+    }
+    self.shootBullet = function(angle) {
+        var b = Bullet(angle)
+        b.x = self.x
+        b.y = self.y
+
+    }
 
     self.updateSpd = function() {
         if (self.pressingRight)
@@ -83,6 +94,10 @@ Player.onConnect = function(socket) {
             player.pressingUp = data.state
         else if (data.inputId === 'down')
             player.pressingDown = data.state
+        else if (data.inputId === 'attack')
+            player.pressingAttack = data.state
+        else if (data.inputId === 'mouseAngle')
+            player.mouseAngle = data.state
     })
 }
 Player.onDisconnect = function(socket) {
@@ -124,11 +139,6 @@ var Bullet = function(angle) {
 Bullet.list = {}
 
 Bullet.update = function() {
-    if (Math.random() < 0.1) {
-        Bullet(Math.random() * 360)
-
-    }
-
     var pack = []
     for (var i in Bullet.list) {
         var bullet = Bullet.list[i]
