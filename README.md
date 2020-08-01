@@ -3,7 +3,7 @@ first game ever (name pending lol)
 
 BULLETS NOW ATTACHED WITH PLAYER AND SHOOT IN THE MOUSE DIRECTION (with left click) :D
 b̶u̶l̶l̶e̶t̶s̶ ̶a̶r̶e̶ ̶r̶a̶n̶d̶o̶m̶l̶y̶ ̶s̶h̶o̶t̶ ̶o̶u̶t̶ ̶a̶t̶ ̶"̶s̶p̶a̶w̶n̶"̶ ̶a̶r̶e̶a̶ 
-n̶o̶t̶ ̶f̶o̶l̶l̶o̶w̶i̶n̶g̶ ̶t̶h̶e̶ ̶p̶l̶a̶y̶e̶r̶   file:///home/ubuntu/Downloads/Download%20(1).png
+n̶o̶t̶ ̶f̶o̶l̶l̶o̶w̶i̶n̶g̶ ̶t̶h̶e̶ ̶p̶l̶a̶y̶e̶r̶ 
 
 CHATBOX WORKS NOW !!!
 
