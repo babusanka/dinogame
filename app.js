@@ -31,6 +31,9 @@ var Entity = function() {
         self.x += self.spdX
         self.y += self.spdY
     }
+    self.getDistance = function(pt) {
+        return Math.sqrt(Math.pow(self.x - pt.x, 2) + Math.pow(self.y - pt.y, 2))
+    }
     return self;
 }
 
@@ -53,12 +56,13 @@ var Player = function(id) {
         super_update()
 
         if (self.pressingAttack) {
-            self.shootBullet(self.mouseAngle)
+            for (var i = -3; i < 3; i++)
+                self.shootBullet(i * 10 + self.mouseAngle)
         }
 
     }
     self.shootBullet = function(angle) {
-        var b = Bullet(angle)
+        var b = Bullet(self.id, angle)
         b.x = self.x
         b.y = self.y
 
@@ -118,12 +122,12 @@ Player.update = function() {
 }
 
 
-var Bullet = function(angle) {
+var Bullet = function(parent, angle) {
     var self = Entity()
     self.id = Math.random()
     self.spdX = Math.cos(angle / 180 * Math.PI) * 10
     self.spdY = Math.sin(angle / 180 * Math.PI) * 10
-
+    self.parent = parent
     self.timer = 0
     self.toRemover = false
     var super_update = self.update
@@ -132,9 +136,22 @@ var Bullet = function(angle) {
             self.toRemover = true
         super_update();
 
+
+
+
+        for (var i in Player.list) {
+            var p = Player.list[i]
+            if (self.getDistance(p) < 32 && self.parent !== p.id) {
+                //handle collision ex; hp--
+                self.toRemove = true
+            }
+        }
+
     }
+
     Bullet.list[self.id] = self
     return self
+
 }
 Bullet.list = {}
 
@@ -143,61 +160,114 @@ Bullet.update = function() {
     for (var i in Bullet.list) {
         var bullet = Bullet.list[i]
         bullet.update()
-        pack.push({
-            x: bullet.x,
-            y: bullet.y,
-        })
+        if (bullet.toRemove)
+            delete Bullet.list[i]
+        else
+            pack.push({
+                x: bullet.x,
+                y: bullet.y,
+            })
     }
     return pack;
 }
 
 
+var DEBUG = true;
+
+var USERS = {
+    //username & password
+    "bob": "asd",
+    "bob2": "asd1",
+}
+
+var isValidPassword = function(data, cb) {
+    setTimeout(function() {
+        cb(USERS[data.username] === data.password)
+    }, 10)
+}
+
+var isUsernameTaken = function(data, cb) {
+    setTimeout(function() {
+        cb(USERS[data.username])
+    }, 10)
+
+}
+
+var addUser = function(data, cb) {
+    setTimeout(function() {
+        USERS[data.username] = data.password
+        cb()
+    }, 10)
+}
+
+
+
 var io = require('socket.io')(serv, {})
 io.sockets.on('connection', function(socket) {
-    socket.id = Math.random()
-    socket.x = 0
-    socket.y = 0
-    socket.number = "" + Math.floor(10 * Math.random())
-    SOCKET_LIST[socket.id] = socket
+            socket.id = Math.random()
+            socket.number = "" + Math.floor(10 * Math.random())
+            SOCKET_LIST[socket.id] = socket
 
-    Player.onConnect(socket)
+            socket.on('signIn', function(data) {
+                isValidPassword(data, function(res) {
+                    if (res) {
+                        Player.onConnect(socket);
+                        socket.emit('signInResponse', { success: true });
+                    } else {
+                        socket.emit('signInResponse', { success: false });
+                    }
 
-    socket.on('disconnect', function() {
-        delete SOCKET_LIST[socket.id]
-        Player.onDisconnect(socket)
-    })
-    socket.on('sendMsgToServer', function(data) {
-        var playerName = ("" + socket.id).slice(2, 7)
-        for (var i in SOCKET_LIST) {
-            SOCKET_LIST[i].emit('addToChat', playerName + ': ' + data)
+                })
+            })
 
-        }
+            socket.on('signUp', function(data) {
+                    isUsernameTaken(data, function(res) {
+                            if (res) {
+                                socket.emit('signUpResponse', { success: false });
+                            } else {
+                                addUser(data, function() {
+                                    socket.emit('signUpResponse', { success: true });
+                                })
 
-    })
-
-})
-
-
-
-setInterval(function() {
-    var pack = {
-        player: Player.update(),
-        bullet: Bullet.update(),
-
-    }
+                            })
+                    })
 
 
+                socket.on('disconnect', function() {
+                    delete SOCKET_LIST[socket.id]
+                    Player.onDisconnect(socket)
+                }) socket.on('sendMsgToServer', function(data) {
+                    var playerName = ("" + socket.id).slice(2, 7)
+                    for (var i in SOCKET_LIST) {
+                        SOCKET_LIST[i].emit('addToChat', playerName + ': ' + data)
+
+                    }
+
+                })
+
+            })
 
 
-    for (var i in SOCKET_LIST) {
-        var socket = SOCKET_LIST[i]
-        socket.emit('newPositions', pack)
 
-    }
+        setInterval(function() {
+            var pack = {
+                player: Player.update(),
+                bullet: Bullet.update(),
 
-
-
-
+            }
 
 
-}, 1000 / 25)
+
+
+            for (var i in SOCKET_LIST) {
+                var socket = SOCKET_LIST[i]
+                socket.emit('newPositions', pack)
+
+            }
+
+
+
+
+
+
+        }, 1000 / 25)
